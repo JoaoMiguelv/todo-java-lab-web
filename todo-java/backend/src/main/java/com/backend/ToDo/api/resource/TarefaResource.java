@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,47 +22,14 @@ import com.backend.ToDo.service.TarefaService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/tarefa")
+@RequestMapping("api/tasks") // Alteração da rota para "api/tasks"
 @RequiredArgsConstructor
 public class TarefaResource {
 
   private final TarefaService service;
 
-  @PostMapping
-  public ResponseEntity salvar(@RequestBody TarefaDTO dto) {
-    try {
-      Tarefa entidade = converter(dto);
-      entidade = service.salvar(entidade);
-      return new ResponseEntity(entidade, HttpStatus.CREATED);
-    } catch (RegraNegocioException e) {
-      return ResponseEntity.badRequest().body(e.getMessage());
-    }
-  }
-
-  @PutMapping("{id}")
-  public ResponseEntity atualizar(@PathVariable("id") Long id, @RequestBody TarefaDTO dto) {
-    return service.obterPorId(id).map(entity -> {
-      try {
-        Tarefa tarefa = converter(dto);
-        tarefa.setId(entity.getId());
-        service.atualizar(tarefa);
-        return ResponseEntity.ok(tarefa);
-      } catch (RegraNegocioException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
-      }
-    }).orElseGet(() -> new ResponseEntity("Nenhuma tarefa encontrada!", HttpStatus.BAD_REQUEST));
-  }
-
-  @DeleteMapping("{id}")
-  public ResponseEntity deletar(@PathVariable("id") Long id) {
-    return service.obterPorId(id).map(entidade -> {
-      service.deletar(entidade);
-      return new ResponseEntity(HttpStatus.NO_CONTENT);
-    }).orElseGet(() -> new ResponseEntity("Nenhuma tarefa encontrada!", HttpStatus.BAD_REQUEST));
-  }
-
   @GetMapping
-  public ResponseEntity buscar(
+  public ResponseEntity<List<Tarefa>> buscar(
       @RequestParam(value = "nome", required = false) String nome,
       @RequestParam(value = "descricao", required = false) String descricao,
       @RequestParam(value = "observacoes", required = false) String observacoes) {
@@ -74,6 +40,39 @@ public class TarefaResource {
 
     List<Tarefa> tarefas = service.buscar(tarefaFiltro);
     return ResponseEntity.ok(tarefas);
+  }
+
+  @PostMapping
+  public ResponseEntity<Tarefa> salvar(@RequestBody TarefaDTO dto) {
+    try {
+      Tarefa tarefa = converter(dto);
+      tarefa = service.salvar(tarefa);
+      return ResponseEntity.status(HttpStatus.CREATED).body(tarefa);
+    } catch (RegraNegocioException e) {
+      return ResponseEntity.badRequest().body(e.getMessage());
+    }
+  }
+
+  @PutMapping("{id}")
+  public ResponseEntity<?> atualizar(@PathVariable("id") Long id, @RequestBody TarefaDTO dto) {
+    return service.obterPorId(id).map(entity -> {
+      try {
+        Tarefa tarefa = converter(dto);
+        tarefa.setId(entity.getId());
+        service.atualizar(tarefa);
+        return ResponseEntity.ok(tarefa);
+      } catch (RegraNegocioException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+      }
+    }).orElse(ResponseEntity.notFound().build());
+  }
+
+  @DeleteMapping("{id}")
+  public ResponseEntity<Void> deletar(@PathVariable("id") Long id) {
+    return service.obterPorId(id).map(tarefa -> {
+      service.deletar(tarefa);
+      return ResponseEntity.noContent().build();
+    }).orElse(ResponseEntity.notFound().build());
   }
 
   private Tarefa converter(TarefaDTO dto) {
