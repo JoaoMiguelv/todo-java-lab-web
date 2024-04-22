@@ -1,2 +1,4 @@
-# todo-java-lab-web
-# Projeto ToDo - João Miguel Moscardini e João Vitor Vasconcelos
+# Projeto ToDo
+Integrantes:
+  - João Miguel Moscardini
+  - João Vitor Vasconcelos
