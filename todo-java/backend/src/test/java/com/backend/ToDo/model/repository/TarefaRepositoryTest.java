@@ -1,6 +1,7 @@
 package com.backend.ToDo.model.repository;
 
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.backend.ToDo.model.entity.Tarefa;
-import com.backend.ToDo.model.repository.TarefaRepository;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)
@@ -20,31 +20,30 @@ import com.backend.ToDo.model.repository.TarefaRepository;
 @ActiveProfiles("test")
 public class TarefaRepositoryTest {
 
-  @Autowired
-  TarefaRepository repository;
+    @Autowired
+    TarefaRepository repository;
 
-  @Autowired
-  TestEntityManager entityManager;
+    @Autowired
+    TestEntityManager entityManager;
 
-  @Test
-  public void deveVerificarAExistenciaDeUmaTarefa() {
-    // Cenário
-    Tarefa tarefa = criarTarefa();
-    entityManager.persist(tarefa);
+    @Test
+    public void givenPersistedTarefa_whenExistsByNome_thenTrue() {
+        // Arrange
+        Tarefa tarefa = criarTarefa();
+        entityManager.persist(tarefa);
 
-    // Ação / Execução
-    boolean result = repository.existsByNome("Nome: TESTE");
+        // Act
+        boolean exists = repository.existsByNome(TarefaTestHelper.NOME_TESTE);
 
-    // Verificação
-    Assertions.assertThat(result).isTrue();
-  }
+        // Assert
+        assertThat(exists).isTrue();
+    }
 
-  public static Tarefa criarTarefa() {
-    return Tarefa
-        .builder()
-        .nome("Nome: TESTE")
-        .descricao("Descrição: TESTE")
-        .observacoes("Observação: TESTE")
-        .build();
-  }
+    private Tarefa criarTarefa() {
+        return Tarefa.builder()
+                     .nome(TarefaTestHelper.NOME_TESTE)
+                     .descricao(TarefaTestHelper.DESCRICAO_TESTE)
+                     .observacoes(TarefaTestHelper.OBSERVACAO_TESTE)
+                     .build();
+    }
 }
